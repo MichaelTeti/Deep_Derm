@@ -105,8 +105,7 @@ def load_model(model_name, image_size):
 
     elif model_name == 'mobilenet':
         return mobilenet.MobileNet(include_top=False,
-                                   input_shape=(image_size, image_size, 3),
-                                   weights=None)
+                                   input_shape=(image_size, image_size, 3))
 
     elif model_name == 'nasnet':
         return nasnet.NASNetMobile(include_top=False,
@@ -119,8 +118,7 @@ def load_model(model_name, image_size):
 
 def freeze_weights(model, model_name):
     for layer in model.layers:
-        if model_name != 'mobilenet':
-            layer.trainable = False
+        layer.trainable = False
     return
 
 
@@ -137,7 +135,7 @@ def add_trainable_layers(model, model_name):
         new_model.add(layers.Dense(2, activation='softmax'))
 
     elif model_name == 'inception_v3':
-        new_model.add(layers.AveragePooling2D(3, 2, 'same'))
+        new_model.add(layers.GlobalAveragePooling2D())
         new_model.add(layers.Flatten())
         new_model.add(layers.Dropout(0.5))
         new_model.add(layers.Dense(2, activation='softmax'))
