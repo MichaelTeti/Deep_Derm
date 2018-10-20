@@ -2,7 +2,7 @@ import numpy as np
 from random import random
 from scipy.ndimage.interpolation import rotate
 from numpy.random import randint, randn
-from scipy.misc import imread, imresize, imsave
+from scipy.misc import imread, imresize, imsave, imshow
 import keras
 from keras import models
 from keras import layers
@@ -16,6 +16,8 @@ from keras.applications import vgg16, \
 
 
 def split_training_and_testing(filenames):
+    '''Splits the filenames into training (80%) and testing (20%).'''
+
     test_indx = randint(0, len(filenames), int(0.2*len(filenames)))
     test_fnames = [filenames[i] for i in test_indx]
     for index in sorted(test_indx, reverse=True):
@@ -24,36 +26,59 @@ def split_training_and_testing(filenames):
     return filenames, test_fnames
 
 
-def load_batch(batch_size, filenames, img_size, fliplr, flipud):
+def load_batch(batch_size, filenames, img_size, fliplr, flipud, rand_crop):
+    '''Loads in a batch of training images each training iteration
+       Args:
+            batch_size, int: The number of images in each training batch
+
+            filenames: A list of filenames pointing to the training images
+
+            img_size, int: An integer describing the image height and width
+
+            fliplr, bool: Whether or not to randomly flip some images across y-axis
+
+            flipud, bool: Whether or not to randomly flip some images across x-axis
+
+            rand_crop, bool: Whether or not to perform random cropping on images
+    '''
+
     assert(batch_size <= len(filenames)), 'batch size bigger than number of files.'
     rand_files = randint(0, len(filenames), batch_size) # batch_size random indices
     filenames_use = [filenames[i] for i in rand_files]  # get files given in rand_files
-    labels = []
+    labels = []  # create empty list to accumulate labels
 
     for ind, filename in enumerate(filenames_use):
-        im_read = imread(filename)
+        im_read = imread(filename) # read in each image
 
+        # if the image shape is not the desired shape, resize it
+        if im_read.shape[0] != img_size or im_read.shape[1] != img_size:
+            im_read = imresize(im_read, (img_size, img_size))
+
+        # image augmentation
         if fliplr and random() > 0.5:
             im_read = np.fliplr(im_read)
         if flipud and random() > 0.5:
             im_read = np.flipud(im_read)
+        if rand_crop and random() > 0.5:
+            pad = int(img_size * .1)
+            im_read = np.pad(im_read, ((pad, pad), (pad, pad), (0, 0)), 'constant')
+            r, c = randint(0, pad*2, 2)
+            im_read = im_read[r:r+img_size, c:c+img_size, :]
 
+        # add appropriate label to each image
         if 'negative' in filename or 'Negative' in filename:
             labels.append([1, 0])
         elif 'positive' in filename or 'Positive' in filename:
             labels.append([0, 1])
 
+        # create empty array to accumulate images if reading in first image
         if ind == 0:
             if len(im_read.shape) == 2:
                 images = np.zeros([batch_size, img_size, img_size])
             elif len(im_read.shape) == 3:
                 images = np.zeros([batch_size, img_size, img_size, 3])
 
-        # if the image shape is not the desired shape, resize it
-        if im_read.shape[0] != img_size or im_read.shape[1] != img_size:
-            im_read = imresize(im_read, (img_size, img_size))
-
-        images[ind, ...] = im_read
+        images[ind, ...] = im_read  # add image to the rest of the images
 
     # normalization
     images = (images - np.mean(images, 0)) / (np.std(images, 0) + 1e-8)
