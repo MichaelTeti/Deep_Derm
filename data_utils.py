@@ -105,7 +105,8 @@ def load_model(model_name, image_size):
 
     elif model_name == 'mobilenet':
         return mobilenet.MobileNet(include_top=False,
-                                   input_shape=(image_size, image_size, 3))
+                                   input_shape=(image_size, image_size, 3),
+                                   weights=None)
 
     elif model_name == 'nasnet':
         return nasnet.NASNetMobile(include_top=False,
@@ -118,7 +119,8 @@ def load_model(model_name, image_size):
 
 def freeze_weights(model, model_name):
     for layer in model.layers:
-        layer.trainable = False
+        if model_name != 'mobilenet':
+            layer.trainable = False
     return
 
 
