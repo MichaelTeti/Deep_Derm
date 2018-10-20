@@ -1,4 +1,6 @@
 import numpy as np
+from random import random
+from scipy.ndimage.interpolation import rotate
 from numpy.random import randint, randn
 from scipy.misc import imread, imresize, imsave
 import keras
@@ -22,15 +24,20 @@ def split_training_and_testing(filenames):
     return filenames, test_fnames
 
 
-def load_batch(batch_size, filenames, img_size):
+def load_batch(batch_size, filenames, img_size, fliplr, flipud):
     assert(batch_size <= len(filenames)), 'batch size bigger than number of files.'
-
     rand_files = randint(0, len(filenames), batch_size) # batch_size random indices
     filenames_use = [filenames[i] for i in rand_files]  # get files given in rand_files
     labels = []
 
     for ind, filename in enumerate(filenames_use):
         im_read = imread(filename)
+
+        if fliplr and random() > 0.5:
+            im_read = np.fliplr(im_read)
+        if flipud and random() > 0.5:
+            im_read = np.flipud(im_read)
+
         if 'negative' in filename or 'Negative' in filename:
             labels.append([1, 0])
         elif 'positive' in filename or 'Positive' in filename:
@@ -48,6 +55,8 @@ def load_batch(batch_size, filenames, img_size):
 
         images[ind, ...] = im_read
 
+    # normalization
+    images = (images - np.mean(images, 0)) / (np.std(images, 0) + 1e-8)
     return images, np.asarray(labels)
 
 

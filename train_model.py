@@ -42,8 +42,18 @@ parser.add_argument(
 parser.add_argument(
     '--test_interval',
     type=int,
-    default=200,
-    help='How often to check validation performance. Default 200 iterations.')
+    default=50,
+    help='How often to check validation performance. Default 50 iterations.')
+parser.add_argument(
+    '--fliplr',
+    type=bool,
+    default=False,
+    help='Augment the images by flipping some of them across y-axis randomly. Default False.')
+parser.add_argument(
+    '--flipud',
+    type=bool,
+    default=False,
+    help='Augment images by flipping some of them across x-axis. Default False.')
 ###############################################################################
 
 args = parser.parse_args()
@@ -67,12 +77,23 @@ if __name__ == '__main__':
           metrics=['acc'])
 
     for iter in range(args.training_iters):
-        data_batch, data_labels = load_batch(batch_size, filenames, im_size)
+        data_batch, data_labels = load_batch(batch_size,
+                                             filenames,
+                                             im_size,
+                                             args.fliplr,
+                                             args.flipud)
+
         train_hist = model.train_on_batch(data_batch,
                                     data_labels,
                                     class_weight={0: 1., 1: args.positive_weight})
 
         if iter % args.test_interval == 0:
-            val_data, val_labels = load_batch(len(test_filenames), test_filenames, im_size)
+            val_data, val_labels = load_batch(len(test_filenames),
+                                              test_filenames,
+                                              im_size,
+                                              False,
+                                              False)
+
             val_hist = model.test_on_batch(val_data, val_labels, sample_weight=None)
+
             print('Iteration: {}; Val. Loss: {}; Val. Acc.: {}'.format(iter, val_hist[0], val_hist[1]))
