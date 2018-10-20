@@ -26,7 +26,7 @@ def split_training_and_testing(filenames):
     return filenames, test_fnames
 
 
-def load_batch(batch_size, filenames, img_size, fliplr, flipud, rand_crop):
+def load_batch(batch_size, filenames, img_size, fliplr, flipud, rand_crop, mode):
     '''Loads in a batch of training images each training iteration
        Args:
             batch_size, int: The number of images in each training batch
@@ -43,7 +43,12 @@ def load_batch(batch_size, filenames, img_size, fliplr, flipud, rand_crop):
     '''
 
     assert(batch_size <= len(filenames)), 'batch size bigger than number of files.'
-    rand_files = randint(0, len(filenames), batch_size) # batch_size random indices
+
+    if mode == 'train':
+        rand_files = randint(0, len(filenames), batch_size) # batch_size random indices
+    elif mode == 'test':
+        rand_files = list(range(len(filenames)))
+
     filenames_use = [filenames[i] for i in rand_files]  # get files given in rand_files
     labels = []  # create empty list to accumulate labels
 
@@ -66,9 +71,9 @@ def load_batch(batch_size, filenames, img_size, fliplr, flipud, rand_crop):
             im_read = im_read[r:r+img_size, c:c+img_size, :]
 
         # add appropriate label to each image
-        if 'negative' in filename or 'Negative' in filename:
+        if 'train' in filename or 'Negative' in filename:
             labels.append([1, 0])
-        elif 'positive' in filename or 'Positive' in filename:
+        elif 'test' in filename or 'Positive' in filename:
             labels.append([0, 1])
 
         # create empty array to accumulate images if reading in first image

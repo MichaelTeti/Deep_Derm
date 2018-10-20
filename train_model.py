@@ -90,7 +90,8 @@ if __name__ == '__main__':
                                              im_size,
                                              args.fliplr,
                                              args.flipud,
-                                             args.random_crop)
+                                             args.random_crop,
+                                             'train')
 
         train_hist = model.train_on_batch(data_batch,
                                     data_labels,
@@ -102,7 +103,8 @@ if __name__ == '__main__':
                                               im_size,
                                               False,
                                               False,
-                                              False)
+                                              False,
+                                              'test')
 
             val_hist = model.test_on_batch(val_data, val_labels, sample_weight=None)
 
