@@ -51,7 +51,7 @@ def freeze_weights(model, model_name):
 
 
 
-def add_trainable_layers(model, model_name):
+def add_trainable_layers(model, model_name, num_outputs):
     new_model = models.Sequential()
     new_model.add(model)
 
@@ -61,16 +61,16 @@ def add_trainable_layers(model, model_name):
         new_model.add(layers.Dropout(0.5))
         new_model.add(layers.Dense(4096, activation='relu'))
         new_model.add(layers.Dropout(0.5))
-        new_model.add(layers.Dense(2, activation='softmax'))
+        new_model.add(layers.Dense(num_outputs, activation='softmax'))
 
     elif model_name == 'inception_v3':
         new_model.add(layers.GlobalAveragePooling2D())
         new_model.add(layers.Flatten())
         new_model.add(layers.Dropout(0.5))
-        new_model.add(layers.Dense(2, activation='softmax'))
+        new_model.add(layers.Dense(num_outputs, activation='softmax'))
 
     else:
         new_model.add(layers.GlobalAveragePooling2D())
-        new_model.add(layers.Dense(2, activation='softmax'))
+        new_model.add(layers.Dense(num_outputs, activation='softmax'))
 
     return new_model
